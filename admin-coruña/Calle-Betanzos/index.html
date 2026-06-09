@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GraciaConsult — Portal de seguimiento</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+  /* LOGIN */
+  #login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1a2e4a 0%, #2d6a9f 100%); padding: 1rem;
+  }
+  .login-box {
+    background: white; border-radius: 16px; padding: 2.5rem 2rem;
+    width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .login-logo { text-align: center; margin-bottom: 1.5rem; }
+  .login-logo .brand { font-size: 26px; font-weight: 700; color: #1a2e4a; }
+  .login-logo .tagline { font-size: 12px; color: #6b7280; margin-top: 4px; }
+  .login-box h2 { font-size: 16px; color: #374151; margin-bottom: 1.5rem; text-align: center; }
+  .input-group { margin-bottom: 1rem; }
+  .input-group label { display: block; font-size: 13px; color: #374151; font-weight: 500; margin-bottom: 6px; }
+  .input-group input {
+    width: 100%; padding: 10px 14px; border: 1.5px solid #e5e7eb;
+    border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.2s;
+  }
+  .input-group input:focus { border-color: #2d6a9f; }
+  .btn-login {
+    width: 100%; padding: 12px; background: #1a2e4a; color: white;
+    border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; margin-top: 0.5rem;
+  }
+  .btn-login:hover { background: #2d6a9f; }
+  .login-error { color: #dc2626; font-size: 13px; text-align: center; margin-top: 0.75rem; display: none; }
+
+  /* PORTAL */
+  #portal-screen { display: none; }
+
+  .topbar {
+    background: #1a2e4a; padding: 0 1.5rem; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .topbar-brand { font-size: 18px; font-weight: 700; color: white; }
+  .topbar-brand span { color: #c9a84c; }
+  .topbar-client { font-size: 13px; color: #7ea8cc; }
+  .btn-logout { background: none; border: 1px solid #2d4a6a; color: #7ea8cc; padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .btn-logout:hover { background: #2d4a6a; color: white; }
+
+  .main { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+  /* Cabecera obra */
+  .obra-header {
+    background: #1a2e4a; border-radius: 12px; padding: 1.5rem;
+    margin-bottom: 1.25rem; color: white;
+  }
+  .obra-header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .obra-dir { font-size: 13px; color: #7ea8cc; margin-bottom: 1rem; }
+  .obra-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .meta-pill { background: rgba(255,255,255,0.08); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: #a8c0d6; }
+  .meta-pill.en_curso   { background: rgba(45,106,159,0.4); color: #7dd3fc; }
+  .meta-pill.finalizada { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+  .meta-pill.pendiente  { background: rgba(245,158,11,0.2); color: #fcd34d; }
+
+  /* Secciones */
+  .seccion { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .seccion-titulo { font-size: 14px; font-weight: 600; color: #1a2e4a; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+
+  /* Timeline */
+  .timeline { display: flex; flex-direction: column; }
+  .tl-item { display: flex; gap: 12px; }
+  .tl-linea { display: flex; flex-direction: column; align-items: center; }
+  .tl-dot { width: 12px; height: 12px; min-height: 12px; border-radius: 50%; margin-top: 3px; flex-shrink: 0; }
+  .tl-dot.ok        { background: #10b981; }
+  .tl-dot.activo    { background: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+  .tl-dot.pendiente { background: #d1d5db; }
+  .tl-linea-v { width: 1.5px; flex: 1; background: #e5e7eb; margin: 3px 0; min-height: 24px; }
+  .tl-content { padding-bottom: 16px; }
+  .tl-title { font-size: 14px; font-weight: 500; color: #111827; }
+  .tl-fecha { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+  /* Documentos */
+  .doc-categoria { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #9ca3af; margin: 1rem 0 0.5rem; }
+  .doc-categoria:first-child { margin-top: 0; }
+  .doc-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;
+    border: 1px solid #f3f4f6; background: #fafafa; transition: background 0.15s;
+  }
+  .doc-item:hover { background: #f3f4f6; }
+  .doc-icono { font-size: 22px; flex-shrink: 0; }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-nombre { font-size: 14px; font-weight: 500; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-subtipo { font-size: 12px; color: #9ca3af; margin-top: 1px; }
+  .btn-dl {
+    background: #1a2e4a; color: white; border: none; border-radius: 6px;
+    padding: 7px 14px; font-size: 12px; font-weight: 500; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+    white-space: nowrap; transition: background 0.2s; flex-shrink: 0;
+  }
+  .btn-dl:hover { background: #2d6a9f; }
+  .btn-dl-pend { font-size: 12px; color: #d1d5db; flex-shrink: 0; }
+
+  .vacio { text-align: center; padding: 1.5rem; color: #9ca3af; font-size: 13px; }
+  .footer { text-align: center; padding: 2rem 1rem; font-size: 12px; color: #9ca3af; }
+  .footer strong { color: #6b7280; }
+
+  @media (max-width: 480px) {
+    .topbar { padding: 0 1rem; }
+    .main { padding: 1rem 0.75rem; }
+    .obra-header, .seccion { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="brand">GraciaConsult</div>
+      <div class="tagline">Portal privado de seguimiento de obras</div>
+    </div>
+    <h2>Acceso exclusivo</h2>
+    <div class="input-group">
+      <label for="pass-input">Contraseña de acceso</label>
+      <input type="password" id="pass-input" placeholder="Introduce tu contraseña"
+        onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <button class="btn-login" onclick="login()">Entrar</button>
+    <div class="login-error" id="login-error">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<div id="portal-screen">
+  <div class="topbar">
+    <div class="topbar-brand">Gracia<span>Consult</span></div>
+    <div class="topbar-client" id="topbar-nombre"></div>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+  <div class="main">
+
+    <div class="obra-header">
+      <h1 id="obra-titulo"></h1>
+      <div class="obra-dir" id="obra-direccion"></div>
+      <div class="obra-meta" id="obra-meta"></div>
+    </div>
+
+    <div class="seccion">
+      <div class="seccion-titulo">📋 Estado de la obra</div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <div class="seccion">
+      <div class="seccion-titulo">📁 Documentos</div>
+      <div id="docs-lista"></div>
+    </div>
+
+    <div class="footer">
+      Portal privado · <strong>GraciaConsult</strong> · A Coruña, Galicia<br>
+      Para cualquier consulta contacta con tu asesor técnico
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIGURACIÓN — editar solo este bloque por cada cliente
+// ═══════════════════════════════════════════════════════
+const CONFIG = {
+
+  // Contraseña única para este cliente
+  password: "betanzos2026",
+
+  cliente: {
+    nombre: "Comunidad C/ betanzos 26, A Coruña"
+  },
+
+  obra: {
+    titulo: "Reparación de fachada principal",
+    direccion: "C/ Betanzos 26, A Coruña",
+    estado: "en_curso",          // "pendiente" | "en_curso" | "finalizada"
+    fechaInicio: "12/05/2026",
+    fechaFinEstimada: "30/06/2026",
+    tipo: "Fachada y revestimiento"
+  },
+
+  // TIMELINE — hitos de la obra
+  // estado: "ok" = completado | "activo" = en curso | "pendiente" = por hacer
+  timeline: [
+    { titulo: "Inspección técnica y diagnóstico",    estado: "ok",        fecha: "12 may 2026 · Completado" },
+    { titulo: "Aprobación en junta",                 estado: "ok",        fecha: "18 may 2026 · Completado" },
+    { titulo: "Inicio de obra",                      estado: "ok",        fecha: "25 may 2026 · Completado" },
+    { titulo: "Ejecución de trabajos",               estado: "activo",    fecha: "En curso · Fin estimado 30 jun 2026" },
+    { titulo: "Revisión técnica final",              estado: "pendiente", fecha: "Pendiente" },
+    { titulo: "Entrega e informe final",             estado: "pendiente", fecha: "Pendiente" },
+  ],
+
+  // DOCUMENTOS — organizados por categorías
+  // url: enlace de Google Drive para descarga directa
+  //   1. Sube el PDF a Google Drive
+  //   2. Click derecho → Compartir → Cualquiera con el enlace
+  //   3. Copia el ID (la parte larga entre /d/ y /view)
+  //   4. Usa: https://drive.google.com/uc?export=download&id=TU_ID
+  // disponible: false → aparece como "Pendiente", sin botón de descarga
+  documentos: [
+    {
+      categoria: "Informes técnicos",
+      archivos: [
+        { nombre: "Informe de diagnóstico inicial",   icono: "📋", disponible: true,  url: "https://drive.google.com/uc?export=download&id=1zczWIfCFY2OFSpu_X8JnbCoMpNl_P_EJ" },
+        { nombre: "Informe fotográfico — Antes",      icono: "📷", disponible: true,  url: "#" },
+        { nombre: "Informe fotográfico — Durante",    icono: "📷", disponible: true,  url: "#" },
+        { nombre: "Informe fotográfico — Después",    icono: "📷", disponible: false, url: "#" },
+        { nombre: "Informe final de obra",            icono: "✅", disponible: false, url: "#" },
+      ]
+    },
+    {
+      categoria: "Documentación administrativa",
+      archivos: [
+        { nombre: "Presupuesto aprobado",  icono: "💶", disponible: true,  url: "#" },
+        { nombre: "Contrato de servicios", icono: "📝", disponible: true,  url: "#" },
+      ]
+    }
+  ]
+};
+// ═══════════════════════════════════════════════════════
+// FIN CONFIGURACIÓN
+// ═══════════════════════════════════════════════════════
+
+function login() {
+  const val = document.getElementById('pass-input').value.trim();
+  if (val === CONFIG.password) {
+    sessionStorage.setItem('gc_auth', '1');
+    renderPortal();
+  } else {
+    const err = document.getElementById('login-error');
+    err.style.display = 'block';
+    document.getElementById('pass-input').value = '';
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('gc_auth');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('portal-screen').style.display = 'none';
+  document.getElementById('pass-input').value = '';
+}
+
+function renderPortal() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('portal-screen').style.display = 'block';
+
+  const { cliente, obra, timeline, documentos } = CONFIG;
+
+  document.getElementById('topbar-nombre').textContent = cliente.nombre;
+  document.getElementById('obra-titulo').textContent = obra.titulo;
+  document.getElementById('obra-direccion').textContent = obra.direccion;
+
+  const estadoLabel = { pendiente: 'Pendiente', en_curso: 'En curso', finalizada: 'Finalizada' };
+  document.getElementById('obra-meta').innerHTML = `
+    <span class="meta-pill ${obra.estado}">${estadoLabel[obra.estado]}</span>
+    <span class="meta-pill">📅 Inicio: ${obra.fechaInicio}</span>
+    <span class="meta-pill">🏁 Fin estimado: ${obra.fechaFinEstimada}</span>
+    <span class="meta-pill">🔧 ${obra.tipo}</span>
+  `;
+
+  document.getElementById('timeline').innerHTML = timeline.map((p, i) => `
+    <div class="tl-item">
+      <div class="tl-linea">
+        <div class="tl-dot ${p.estado}"></div>
+        ${i < timeline.length - 1 ? '<div class="tl-linea-v"></div>' : ''}
+      </div>
+      <div class="tl-content">
+        <div class="tl-title">${p.titulo}</div>
+        <div class="tl-fecha">${p.fecha}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('docs-lista').innerHTML = documentos.map(cat => `
+    <div class="doc-categoria">${cat.categoria}</div>
+    ${cat.archivos.map(doc => `
+      <div class="doc-item">
+        <span class="doc-icono">${doc.icono}</span>
+        <div class="doc-info">
+          <div class="doc-nombre">${doc.nombre}</div>
+          <div class="doc-subtipo">${doc.disponible ? 'Disponible para descarga' : 'Pendiente de generación'}</div>
+        </div>
+        ${doc.disponible && doc.url !== '#'
+          ? `<a class="btn-dl" href="${doc.url}" target="_blank">⬇ Descargar</a>`
+          : doc.disponible
+            ? `<span class="btn-dl-pend">Enlace pendiente</span>`
+            : `<span class="btn-dl-pend">Pendiente</span>`
+        }
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+window.addEventListener('load', () => {
+  if (sessionStorage.getItem('gc_auth') === '1') renderPortal();
+});
+</script>
+</body>
+</html>
