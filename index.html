@@ -1,0 +1,472 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GraciaConsult — Portal de seguimiento</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1a2e4a 0%, #2d6a9f 100%);
+    padding: 1rem;
+  }
+  .login-box {
+    background: white; border-radius: 16px; padding: 2.5rem 2rem;
+    width: 100%; max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .login-logo { text-align: center; margin-bottom: 1.5rem; }
+  .login-logo .brand { font-size: 26px; font-weight: 700; color: #1a2e4a; }
+  .login-logo .tagline { font-size: 12px; color: #6b7280; margin-top: 4px; }
+  .login-box h2 { font-size: 16px; color: #374151; margin-bottom: 1.5rem; text-align: center; }
+  .input-group { margin-bottom: 1rem; }
+  .input-group label { display: block; font-size: 13px; color: #374151; font-weight: 500; margin-bottom: 6px; }
+  .input-group input {
+    width: 100%; padding: 10px 14px; border: 1.5px solid #e5e7eb;
+    border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.2s;
+  }
+  .input-group input:focus { border-color: #2d6a9f; }
+  .btn-login {
+    width: 100%; padding: 12px; background: #1a2e4a; color: white;
+    border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; margin-top: 0.5rem;
+  }
+  .btn-login:hover { background: #2d6a9f; }
+  .login-error { color: #dc2626; font-size: 13px; text-align: center; margin-top: 0.75rem; display: none; }
+
+  /* ── PORTAL ── */
+  #portal-screen { display: none; }
+
+  .topbar {
+    background: #1a2e4a; padding: 0 1.5rem; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .topbar-brand { font-size: 18px; font-weight: 700; color: white; }
+  .topbar-brand span { color: #c9a84c; }
+  .topbar-client { font-size: 13px; color: #7ea8cc; }
+  .btn-logout { background: none; border: 1px solid #2d4a6a; color: #7ea8cc; padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .btn-logout:hover { background: #2d4a6a; color: white; }
+
+  .main { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+  /* Resumen obra */
+  .obra-header {
+    background: #1a2e4a; border-radius: 12px; padding: 1.5rem;
+    margin-bottom: 1.5rem; color: white;
+  }
+  .obra-header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .obra-header .obra-dir { font-size: 13px; color: #7ea8cc; margin-bottom: 1rem; }
+  .obra-meta { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .meta-pill {
+    background: rgba(255,255,255,0.08); border-radius: 20px;
+    padding: 4px 12px; font-size: 12px; color: #a8c0d6;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .meta-pill.estado-curso { background: rgba(45,106,159,0.4); color: #7dd3fc; }
+  .meta-pill.estado-ok { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+  .meta-pill.estado-pend { background: rgba(245,158,11,0.2); color: #fcd34d; }
+
+  /* Progreso */
+  .progress-wrap { margin: 1rem 0 0; }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #c9a84c; border-radius: 3px; transition: width 0.5s; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #7ea8cc; margin-top: 5px; }
+
+  /* Secciones */
+  .seccion { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .seccion-titulo {
+    font-size: 14px; font-weight: 600; color: #1a2e4a;
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;
+  }
+  .seccion-titulo .icono { font-size: 16px; }
+
+  /* Timeline */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .tl-item { display: flex; gap: 12px; }
+  .tl-linea { display: flex; flex-direction: column; align-items: center; }
+  .tl-dot {
+    width: 12px; height: 12px; min-height: 12px; border-radius: 50%;
+    margin-top: 3px; flex-shrink: 0;
+  }
+  .tl-dot.ok { background: #10b981; }
+  .tl-dot.activo { background: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+  .tl-dot.pendiente { background: #d1d5db; }
+  .tl-linea-v { width: 1.5px; flex: 1; background: #e5e7eb; margin: 3px 0; min-height: 24px; }
+  .tl-content { padding-bottom: 16px; }
+  .tl-title { font-size: 14px; font-weight: 500; color: #111827; }
+  .tl-fecha { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+  /* Fotos */
+  .fotos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .foto-item { border-radius: 8px; overflow: hidden; position: relative; aspect-ratio: 4/3; background: #f3f4f6; }
+  .foto-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .foto-badge {
+    position: absolute; top: 6px; left: 6px;
+    background: rgba(0,0,0,0.65); color: white;
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .foto-badge.antes { background: rgba(239,68,68,0.85); }
+  .foto-badge.despues { background: rgba(16,185,129,0.85); }
+  .foto-badge.incidencia { background: rgba(245,158,11,0.85); }
+
+  /* Incidencias */
+  .incidencia-item {
+    background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px;
+    padding: 0.875rem 1rem; margin-bottom: 8px;
+  }
+  .incidencia-item:last-child { margin-bottom: 0; }
+  .inc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .inc-icon { font-size: 16px; }
+  .inc-titulo { font-size: 14px; font-weight: 600; color: #92400e; }
+  .inc-desc { font-size: 13px; color: #78350f; line-height: 1.5; }
+  .inc-fecha { font-size: 11px; color: #b45309; margin-top: 4px; }
+  .inc-estado {
+    display: inline-block; font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 4px; margin-left: auto;
+  }
+  .inc-estado.abierta { background: #fee2e2; color: #991b1b; }
+  .inc-estado.revision { background: #fef3c7; color: #92400e; }
+  .inc-estado.resuelta { background: #d1fae5; color: #065f46; }
+
+  /* Documentos */
+  .doc-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid #f3f4f6;
+  }
+  .doc-item:last-child { border-bottom: none; }
+  .doc-icono { font-size: 24px; flex-shrink: 0; }
+  .doc-info { flex: 1; }
+  .doc-nombre { font-size: 14px; font-weight: 500; color: #111827; }
+  .doc-tipo { font-size: 12px; color: #9ca3af; margin-top: 1px; }
+  .btn-descargar {
+    background: #1a2e4a; color: white; border: none; border-radius: 6px;
+    padding: 6px 14px; font-size: 12px; font-weight: 500; cursor: pointer;
+    text-decoration: none; display: inline-block; white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .btn-descargar:hover { background: #2d6a9f; }
+
+  /* Footer */
+  .footer { text-align: center; padding: 2rem 1rem; font-size: 12px; color: #9ca3af; }
+  .footer strong { color: #6b7280; }
+
+  /* Vacío */
+  .vacio { text-align: center; padding: 2rem; color: #9ca3af; font-size: 13px; }
+
+  @media (max-width: 480px) {
+    .topbar { padding: 0 1rem; }
+    .main { padding: 1rem 0.75rem; }
+    .obra-header { padding: 1.25rem; }
+    .seccion { padding: 1rem; }
+    .fotos-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     PANTALLA DE LOGIN
+════════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="brand">GraciaConsult</div>
+      <div class="tagline">Portal de seguimiento de obras</div>
+    </div>
+    <h2>Acceso privado</h2>
+    <div class="input-group">
+      <label for="pass-input">Contraseña de acceso</label>
+      <input type="password" id="pass-input" placeholder="Introduce tu contraseña"
+        onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <button class="btn-login" onclick="login()">Entrar</button>
+    <div class="login-error" id="login-error">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PORTAL DE SEGUIMIENTO
+════════════════════════════════════════════════════════ -->
+<div id="portal-screen">
+
+  <div class="topbar">
+    <div class="topbar-brand">Gracia<span>Consult</span></div>
+    <div class="topbar-client" id="topbar-nombre"></div>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+
+  <div class="main">
+
+    <!-- Cabecera obra -->
+    <div class="obra-header">
+      <h1 id="obra-titulo"></h1>
+      <div class="obra-dir" id="obra-direccion"></div>
+      <div class="obra-meta" id="obra-meta"></div>
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-label">
+          <span>Progreso de la obra</span>
+          <span id="progress-pct"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="seccion">
+      <div class="seccion-titulo"><span class="icono">📋</span> Estado de la obra</div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <!-- Fotos -->
+    <div class="seccion" id="seccion-fotos">
+      <div class="seccion-titulo"><span class="icono">📷</span> Fotografías</div>
+      <div class="fotos-grid" id="fotos-grid"></div>
+    </div>
+
+    <!-- Incidencias -->
+    <div class="seccion" id="seccion-incidencias">
+      <div class="seccion-titulo"><span class="icono">⚠️</span> Incidencias</div>
+      <div id="incidencias-lista"></div>
+    </div>
+
+    <!-- Documentos -->
+    <div class="seccion" id="seccion-docs">
+      <div class="seccion-titulo"><span class="icono">📄</span> Documentos</div>
+      <div id="docs-lista"></div>
+    </div>
+
+    <div class="footer">
+      Portal privado generado por <strong>GraciaConsult</strong> · A Coruña, Galicia<br>
+      Para cualquier consulta contacta con tu asesor técnico
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN — EDITAR ESTO PARA CADA CLIENTE
+// ═══════════════════════════════════════════════════════════════
+const CONFIG = {
+
+  // Contraseña de acceso para este cliente
+  password: "comunidad2024",
+
+  // Datos del cliente y la obra
+  cliente: {
+    nombre: "Comunidad C/ Ejemplo 42",
+    administrador: "Gestoría Martínez SL"
+  },
+
+  obra: {
+    titulo: "Reparación de fachada principal",
+    direccion: "C/ Ejemplo 42, A Coruña",
+    estado: "en_curso",        // "pendiente" | "en_curso" | "finalizada"
+    progreso: 65,              // 0-100
+    fechaInicio: "12/05/2026",
+    fechaFinEstimada: "30/06/2026",
+    tipo: "Fachada y revestimiento"
+  },
+
+  // Timeline — pasos de la obra
+  // estado: "ok" | "activo" | "pendiente"
+  timeline: [
+    { titulo: "Inspección técnica y diagnóstico", estado: "ok",       fecha: "12 may 2026 · Completado" },
+    { titulo: "Aprobación en junta de propietarios", estado: "ok",    fecha: "18 may 2026 · Completado" },
+    { titulo: "Inicio de obra",                    estado: "ok",       fecha: "25 may 2026 · Completado" },
+    { titulo: "Ejecución de trabajos",             estado: "activo",   fecha: "En curso · Fin estimado 30 jun 2026" },
+    { titulo: "Revisión técnica final",            estado: "pendiente", fecha: "Pendiente" },
+    { titulo: "Entrega e informe final",           estado: "pendiente", fecha: "Pendiente" },
+  ],
+
+  // Fotos — usar URLs de Google Drive o cualquier URL pública
+  // Para Google Drive: abre la foto > compartir > "cualquiera con el enlace" > copia el ID de la URL
+  // URL directa: https://drive.google.com/uc?export=view&id=TU_ID_AQUI
+  fotos: [
+    { url: "https://placehold.co/400x300/1a2e4a/7ea8cc?text=Antes+1", tipo: "antes",    descripcion: "Estado inicial fachada norte" },
+    { url: "https://placehold.co/400x300/1a2e4a/7ea8cc?text=Antes+2", tipo: "antes",    descripcion: "Grietas zona planta 2" },
+    { url: "https://placehold.co/400x300/2d6a9f/white?text=En+obra",  tipo: "despues",  descripcion: "Trabajos en curso" },
+  ],
+
+  // Incidencias
+  incidencias: [
+    {
+      titulo: "Humedad inesperada en planta 2",
+      descripcion: "Al retirar el revestimiento se detectó humedad en la pared interior. Se ha tomado muestra y está en valoración técnica. No afecta al plazo estimado.",
+      fecha: "Reportada el 20 may 2026",
+      estado: "revision"    // "abierta" | "revision" | "resuelta"
+    }
+  ],
+
+  // Documentos — enlace de descarga directo desde Google Drive
+  // Para Google Drive: compartir > "cualquiera con el enlace" > cambia /view por /export?format=pdf
+  // O usa: https://drive.google.com/uc?export=download&id=TU_ID_AQUI
+  documentos: [
+    {
+      nombre: "Informe técnico de diagnóstico",
+      tipo: "informe_diagnostico",
+      icono: "📋",
+      url: "#",   // <- sustituir por enlace real de Google Drive
+      disponible: true
+    },
+    {
+      nombre: "Presupuesto aprobado",
+      tipo: "presupuesto",
+      icono: "💶",
+      url: "#",
+      disponible: true
+    },
+    {
+      nombre: "Contrato de servicios",
+      tipo: "contrato",
+      icono: "📝",
+      url: "#",
+      disponible: true
+    },
+    {
+      nombre: "Informe final de obra",
+      tipo: "informe_final",
+      icono: "✅",
+      url: "#",
+      disponible: false   // false = pendiente, no se muestra botón de descarga
+    }
+  ]
+};
+// ═══════════════════════════════════════════════════════════════
+// FIN CONFIGURACIÓN
+// ═══════════════════════════════════════════════════════════════
+
+
+// LOGIN
+function login() {
+  const input = document.getElementById('pass-input').value.trim();
+  const error = document.getElementById('login-error');
+  if (input === CONFIG.password) {
+    sessionStorage.setItem('gc_auth', '1');
+    mostrarPortal();
+  } else {
+    error.style.display = 'block';
+    document.getElementById('pass-input').value = '';
+    setTimeout(() => { error.style.display = 'none'; }, 3000);
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('gc_auth');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('portal-screen').style.display = 'none';
+  document.getElementById('pass-input').value = '';
+}
+
+// RENDERIZAR PORTAL
+function mostrarPortal() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('portal-screen').style.display = 'block';
+
+  const { cliente, obra, timeline, fotos, incidencias, documentos } = CONFIG;
+
+  // Topbar
+  document.getElementById('topbar-nombre').textContent = cliente.nombre;
+
+  // Cabecera obra
+  document.getElementById('obra-titulo').textContent = obra.titulo;
+  document.getElementById('obra-direccion').textContent = obra.direccion;
+
+  // Meta pills
+  const estadoLabels = { pendiente: 'Pendiente', en_curso: 'En curso', finalizada: 'Finalizada' };
+  const estadoClases = { pendiente: 'estado-pend', en_curso: 'estado-curso', finalizada: 'estado-ok' };
+  document.getElementById('obra-meta').innerHTML = `
+    <span class="meta-pill ${estadoClases[obra.estado]}">${estadoLabels[obra.estado]}</span>
+    <span class="meta-pill">📅 Inicio: ${obra.fechaInicio}</span>
+    <span class="meta-pill">🏁 Fin estimado: ${obra.fechaFinEstimada}</span>
+    <span class="meta-pill">🔧 ${obra.tipo}</span>
+  `;
+
+  // Progreso
+  document.getElementById('progress-fill').style.width = obra.progreso + '%';
+  document.getElementById('progress-pct').textContent = obra.progreso + '%';
+
+  // Timeline
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = timeline.map((paso, i) => `
+    <div class="tl-item">
+      <div class="tl-linea">
+        <div class="tl-dot ${paso.estado}"></div>
+        ${i < timeline.length - 1 ? '<div class="tl-linea-v"></div>' : ''}
+      </div>
+      <div class="tl-content">
+        <div class="tl-title">${paso.titulo}</div>
+        <div class="tl-fecha">${paso.fecha}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Fotos
+  const grid = document.getElementById('fotos-grid');
+  if (fotos.length === 0) {
+    grid.innerHTML = '<div class="vacio">Aún no hay fotografías disponibles</div>';
+  } else {
+    grid.innerHTML = fotos.map(f => `
+      <div class="foto-item">
+        <img src="${f.url}" alt="${f.descripcion}" loading="lazy">
+        <span class="foto-badge ${f.tipo}">${f.tipo === 'antes' ? 'Antes' : f.tipo === 'despues' ? 'Después' : 'Incidencia'}</span>
+      </div>
+    `).join('');
+  }
+
+  // Incidencias
+  const incLista = document.getElementById('incidencias-lista');
+  if (incidencias.length === 0) {
+    incLista.innerHTML = '<div class="vacio">✅ No hay incidencias registradas</div>';
+  } else {
+    const estadoInc = { abierta: 'Abierta', revision: 'En revisión', resuelta: 'Resuelta' };
+    incLista.innerHTML = incidencias.map(inc => `
+      <div class="incidencia-item">
+        <div class="inc-header">
+          <span class="inc-icon">⚠️</span>
+          <span class="inc-titulo">${inc.titulo}</span>
+          <span class="inc-estado ${inc.estado}">${estadoInc[inc.estado]}</span>
+        </div>
+        <div class="inc-desc">${inc.descripcion}</div>
+        <div class="inc-fecha">${inc.fecha}</div>
+      </div>
+    `).join('');
+  }
+
+  // Documentos
+  const docsLista = document.getElementById('docs-lista');
+  docsLista.innerHTML = documentos.map(doc => `
+    <div class="doc-item">
+      <span class="doc-icono">${doc.icono}</span>
+      <div class="doc-info">
+        <div class="doc-nombre">${doc.nombre}</div>
+        <div class="doc-tipo">${doc.disponible ? 'Disponible para descarga' : 'Pendiente de generación'}</div>
+      </div>
+      ${doc.disponible && doc.url !== '#'
+        ? `<a class="btn-descargar" href="${doc.url}" target="_blank" download>Descargar</a>`
+        : doc.disponible
+          ? `<span style="font-size:12px;color:#9ca3af;">Enlace pendiente</span>`
+          : `<span style="font-size:12px;color:#d1d5db;">Pendiente</span>`
+      }
+    </div>
+  `).join('');
+}
+
+// Comprobar sesión al cargar
+window.addEventListener('load', () => {
+  if (sessionStorage.getItem('gc_auth') === '1') mostrarPortal();
+});
+</script>
+
+</body>
+</html>
