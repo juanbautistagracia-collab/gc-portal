@@ -142,14 +142,15 @@ const CONFIG = {
     nombre: "Administradora" // TODO: poner el nombre real de la administradora
   },
 
-  // OBRAS — una tarjeta por obra. "link" es la carpeta relativa de cada obra
-  // (debe coincidir con la carpeta que ya tiene su propio index.html con el detalle)
+  // OBRAS — una tarjeta por obra. "link" debe ser la ruta ABSOLUTA desde la raíz
+  // (empezando por "/admin-carlos/...") para que el enlace funcione siempre,
+  // con o sin barra final en la URL del navegador. Ej: "/admin-carlos/calle-salamanca/"
   obras: [
     {
       titulo: "Reparación de fachada principal",
       direccion: "C/ Salamanca 34, A Coruña",
       estado: "en_curso", // "pendiente" | "en_curso" | "finalizada"
-      link: "calle-salamanca/"
+      link: "/admin-carlos/calle-salamanca/"
     }
   ]
 };
